@@ -1,0 +1,84 @@
+version: 2.1
+
+jobs:
+  build-and-deploy:
+    docker:
+      - image: cimg/node:23.7
+    steps:
+      - checkout
+      - setup_remote_docker
+
+      # Setup Corepack Yarn 4.9.4
+      - run:
+          name: Setup Corepack Yarn
+          command: |
+            sudo corepack enable
+            corepack prepare yarn@4.9.4 --activate
+            yarn --version
+
+      # Install dependencies for lint/build (outside Docker)
+      - run:
+          name: Install Dependencies
+          command: yarn install --frozen-lockfile
+
+      # Run lint check
+      - run:
+          name: Run ESLint
+          command: yarn lint
+
+      # Run build (fast fail before Docker build)
+      - run:
+          name: Run TypeScript + Vite Build
+          command: yarn build
+
+      # Set environment variables
+      - run:
+          name: Set CircleCI Environment Variables
+          command: |
+            echo "export BRANCH_NAME=$CIRCLE_BRANCH" >> $BASH_ENV
+            echo "export ORG_NAME=$ORG_NAME" >> $BASH_ENV
+            echo "export REPO_NAME=argus.operator-ui" >> $BASH_ENV
+
+      # Login to Docker Hub / your registry (expects DOCKER_USER / DOCKER_PASS in CircleCI project env vars)
+      - run:
+          name: Login to Docker
+          command: |
+            echo "$DOCKER_PASS" | docker login -u "$DOCKER_USER" --password-stdin
+
+      # Ensure the Docker network exists
+      - run:
+          name: Running networks and building image
+          command: |
+            existing_networks=$(docker network ls -f name=testing_network -q)
+            if [ -z "$existing_networks" ]; then
+              docker network create -d bridge testing_network
+            else
+              echo "Network already exists."
+            fi
+
+      # Build Docker image
+      - run:
+          name: Build Docker Image
+          command: |
+            docker build -t $ORG_NAME/$REPO_NAME:$CIRCLE_SHA1 -t $ORG_NAME/$REPO_NAME:$BRANCH_NAME .
+
+      # Run the container
+      - run:
+          name: Run Docker Container
+          command: |
+            docker run -d \
+              --network=testing_network \
+              --name=$REPO_NAME $ORG_NAME/$REPO_NAME:$BRANCH_NAME
+            sleep 10  # Allow app to start
+
+      # Push the docker image
+      - run:
+          name: Push the docker image
+          when: always
+          command: |
+            docker push $ORG_NAME/$REPO_NAME:$BRANCH_NAME
+
+workflows:
+  build-and-deploy-workflow:
+    jobs:
+      - build-and-deploy
