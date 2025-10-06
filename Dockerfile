@@ -17,6 +17,9 @@ RUN yarn install --immutable
 # Copy the rest of the application files
 COPY . .
 
+# Lint Check
+RUN yarn lint
+
 # Build the application (Vite puts output in /app/dist, includes public/)
 RUN yarn build
 
