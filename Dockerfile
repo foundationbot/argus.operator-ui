@@ -20,25 +20,8 @@ COPY . .
 # Build the application (Vite puts output in /app/dist, includes public/)
 RUN yarn build
 
-###### Runtime stage: serve static files via Nginx ######
-
-# Nginx is a fast static server; great for .wasm, .obj/.mtl, JS/CSS, etc.
-FROM nginx:1.27-alpine
-
-# Bring in your Nginx config (already set to `listen 8000;`)
-# This config should also define:
-#  - Content-Type for .wasm (application/wasm) for streaming compilation
-#  - Cache-Control headers for static assets/meshes
-COPY nginx.conf /etc/nginx/nginx.conf
-
-# Copy built app into Nginx web root
-COPY --from=builder /app/dist /usr/share/nginx/html
-
-# Give the nginx user write access to runtime dirs (pid/cache) if needed
-RUN chown -R nginx:nginx /usr/share/nginx/html /var/cache/nginx /var/run
-
 # Allow port configuration at runtime
 EXPOSE 8000
 
-# Run Nginx in the foreground
-CMD ["nginx", "-g", "daemon off;"]
+# Run the application
+CMD ["yarn", "start"]
