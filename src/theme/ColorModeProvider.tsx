@@ -1,4 +1,3 @@
-// src/theme/ColorModeProvider.tsx
 import { ReactNode, useEffect, useMemo, useState, useContext } from "react";
 import { CssBaseline, ThemeProvider, createTheme, PaletteMode } from "@mui/material";
 import { ColorModeContext } from "./colorModeContext";
