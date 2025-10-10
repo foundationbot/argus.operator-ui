@@ -12,13 +12,21 @@ export default function App() {
     const active = [...matches].reverse().find((m) => m.handle?.label)?.handle?.label || "";
     const title = `${prefix} / ${active}`;
 
+    // Toggle instead of forcing open=true
+    const toggleMenu = React.useCallback(() => {
+        setOpen((v) => !v);
+    }, []);
+
     return (
         <Box sx={{ display: "flex" }}>
             <CssBaseline />
-            <AppHeader title={title} open={open} onOpen={() => setOpen(true)} />
-            <AppMenu open={open} onClose={() => setOpen(false)} items={NAV_ITEMS} />
+            <AppHeader title={title} open={open} onOpen={toggleMenu} />
+
+            {/* AppMenu starts below the header; no onClose prop needed */}
+            <AppMenu open={open} items={NAV_ITEMS} />
+
             <Box component="main" sx={{ flexGrow: 1, p: 3 }}>
-                <Toolbar />
+                {/* Single Toolbar to push content below the fixed AppBar */}
                 <Toolbar />
                 <Outlet />
             </Box>

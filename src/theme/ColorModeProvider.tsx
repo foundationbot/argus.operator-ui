@@ -1,48 +1,29 @@
-import { ReactNode, useEffect, useMemo, useState, useContext } from "react";
-import { CssBaseline, ThemeProvider, createTheme, PaletteMode } from "@mui/material";
-import { ColorModeContext } from "./colorModeContext";
-import { COLORS } from "./colorPalette";
-import { IconButton, Tooltip } from "@mui/material";
-import DarkModeIcon from "@mui/icons-material/DarkMode";
+// src/theme/ColorModeProvider.tsx
+import * as React from "react";
+import { ThemeProvider, CssBaseline, IconButton, Tooltip } from "@mui/material";
 import LightModeIcon from "@mui/icons-material/LightMode";
+import DarkModeIcon from "@mui/icons-material/DarkMode";
+import type { PaletteMode } from "@mui/material";
+import { makeTheme } from "./theme";
+import { ColorModeContext } from "./colorModeContext";
 
-export function ColorModeProvider({ children }: { children: ReactNode }) {
-    const [mode, setMode] = useState<PaletteMode>("dark");
+export function ColorModeProvider({ children }: { children: React.ReactNode }) {
+    const [mode, setMode] = React.useState<PaletteMode>("dark");
 
-    useEffect(() => {
+    React.useEffect(() => {
         const saved = (localStorage.getItem("color-mode") as PaletteMode) || null;
         if (saved === "light" || saved === "dark") setMode(saved);
     }, []);
 
-    const toggle = () => {
-        setMode(m => {
+    const toggle = React.useCallback(() => {
+        setMode((m) => {
             const next = m === "light" ? "dark" : "light";
             localStorage.setItem("color-mode", next);
             return next;
         });
-    };
+    }, []);
 
-    const theme = useMemo(
-        () =>
-            createTheme({
-                palette: {
-                    mode,
-                    // wire global tokens into standard MUI slots
-                    success: { main: COLORS.success, contrastText: "#000" },
-                    error: { main: COLORS.error, contrastText: "#fff" },
-                    warning: { main: COLORS.warning, contrastText: "#000" },
-                    // (optional) info/primary if you want to standardize them too
-                    info: { main: COLORS.info },
-                    // primary: { main: mode === "light" ? COLORS.primaryDark : COLORS.primaryLight },
-                },
-                shape: { borderRadius: 10 },
-                components: {
-                    MuiPaper: { styleOverrides: { root: { borderRadius: 12 } } },
-                    MuiAppBar: { styleOverrides: { root: { borderRadius: 0 } } },
-                },
-            }),
-        [mode]
-    );
+    const theme = React.useMemo(() => makeTheme(mode), [mode]);
 
     return (
         <ColorModeContext.Provider value={{ mode, toggle }}>
@@ -55,11 +36,15 @@ export function ColorModeProvider({ children }: { children: ReactNode }) {
 }
 
 export function ColorModeToggle() {
-    const { mode, toggle } = useContext(ColorModeContext)!;
+    const ctx = React.useContext(ColorModeContext);
+    if (!ctx) return null; // or throw if you prefer strict usage
+    const { mode, toggle } = ctx;
+
+    const isDark = mode === "dark";
     return (
-        <Tooltip title={`Switch to ${mode === "light" ? "dark" : "light"} mode`}>
+        <Tooltip title={isDark ? "Switch to light mode" : "Switch to dark mode"}>
             <IconButton color="inherit" onClick={toggle} aria-label="toggle color mode">
-                {mode === "light" ? <DarkModeIcon /> : <LightModeIcon />}
+                {isDark ? <LightModeIcon /> : <DarkModeIcon />}
             </IconButton>
         </Tooltip>
     );

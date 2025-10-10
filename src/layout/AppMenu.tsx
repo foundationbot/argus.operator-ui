@@ -1,27 +1,27 @@
 import {
-    Drawer, List, ListItem, ListItemButton, ListItemText,
-    ListItemIcon, IconButton, Toolbar, Typography
+    Drawer,
+    List,
+    ListItem,
+    ListItemButton,
+    ListItemText,
+    ListItemIcon,
 } from "@mui/material";
-import ChevronLeftIcon from "@mui/icons-material/ChevronLeft";
-import ChevronRightIcon from "@mui/icons-material/ChevronRight";
-import { useTheme } from "@mui/material/styles";
 import { Link, useLocation } from "react-router-dom";
 import type { ElementType } from "react";
 import type { SvgIconProps } from "@mui/material/SvgIcon";
-import { COLORS } from "../theme/colorPalette";
 
 export const drawerWidth = 260;
+const APPBAR_H_MOBILE = 56;
+const APPBAR_H_DESKTOP = 64;
 
 type NavItem = { to: string; label: string; Icon?: ElementType<SvgIconProps> };
 
 export interface AppMenuProps {
-    open: boolean;
-    onClose: () => void;
+    open: boolean;       
     items: NavItem[];
 }
 
-export function AppMenu({ open, onClose, items }: AppMenuProps) {
-    const theme = useTheme();
+export function AppMenu({ open, items }: AppMenuProps) {
     const location = useLocation();
 
     return (
@@ -34,50 +34,35 @@ export function AppMenu({ open, onClose, items }: AppMenuProps) {
                 whiteSpace: "nowrap",
                 boxSizing: "border-box",
                 "& .MuiDrawer-paper": {
+                    // Start BELOW the AppHeader and fill remaining height
+                    position: "fixed",
+                    left: 0,
+                    top: APPBAR_H_MOBILE,
+                    height: `calc(100% - ${APPBAR_H_MOBILE}px)`,
+                    [t.breakpoints.up("sm")]: {
+                        top: APPBAR_H_DESKTOP,
+                        height: `calc(100% - ${APPBAR_H_DESKTOP}px)`,
+                    },
+
                     width: open ? drawerWidth : `calc(${t.spacing(7)} + 1px)`,
                     overflowX: "hidden",
                     transition: t.transitions.create("width", {
                         easing: t.transitions.easing.sharp,
-                        duration: open ? t.transitions.duration.enteringScreen : t.transitions.duration.leavingScreen,
+                        duration: open
+                            ? t.transitions.duration.enteringScreen
+                            : t.transitions.duration.leavingScreen,
                     }),
+
+                    // Align with AppHeader bottom border (header draws the horizontal line)
+                    borderTop: "none",
+                    borderRight: `1px solid ${t.palette.divider}`,
                 },
             })}
         >
-            {/* Centered title + chevron */}
-            <Toolbar
-                sx={{
-                    position: "relative",
-                    display: "flex",
-                    alignItems: "center",
-                    justifyContent: "flex-end",
-                    px: 2,
-                }}
-            >
-                {open && (
-                    <Typography
-                        variant="h6"
-                        sx={{
-                            position: "absolute",
-                            left: "45%",
-                            transform: "translateX(-50%)",
-                            fontWeight: 600,
-                            letterSpacing: 0.5,
-                            color: COLORS.primaryDark,
-                            userSelect: "none",
-                            pointerEvents: "none",
-                        }}
-                    >
-                        Control Panel
-                    </Typography>
-                )}
-                <IconButton onClick={onClose} aria-label="close drawer" size="small">
-                    {theme.direction === "rtl" ? <ChevronRightIcon /> : <ChevronLeftIcon />}
-                </IconButton>
-            </Toolbar>
-
             <List sx={{ pt: 0 }}>
                 {items.map(({ to, label, Icon }) => {
-                    const selected = to === "/" ? location.pathname === "/" : location.pathname.startsWith(to);
+                    const selected =
+                        to === "/" ? location.pathname === "/" : location.pathname.startsWith(to);
                     return (
                         <ListItem key={to} disablePadding sx={{ display: "block" }}>
                             <ListItemButton
