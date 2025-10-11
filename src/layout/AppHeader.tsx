@@ -1,6 +1,8 @@
-import { AppBar, Toolbar, Typography, IconButton } from "@mui/material";
+import { AppBar, Toolbar, Typography, IconButton, Tooltip } from "@mui/material";
 import MenuIcon from "@mui/icons-material/Menu";
 import MenuOpenIcon from '@mui/icons-material/MenuOpen';
+import LogoutIcon from "@mui/icons-material/Logout";
+import { useAuth } from "../auth";
 import { ColorModeToggle } from "../theme/ColorModeProvider";
 
 export const drawerWidth = 260;
@@ -12,6 +14,8 @@ export interface AppHeaderProps {
 }
 
 export function AppHeader({ title, open, onOpen }: AppHeaderProps) {
+    const { isAuthenticated, logout } = useAuth();
+
     return (
         <AppBar
             position="fixed"
@@ -38,6 +42,19 @@ export function AppHeader({ title, open, onOpen }: AppHeaderProps) {
                 </Typography>
 
                 <ColorModeToggle />
+
+                {isAuthenticated && (
+                    <Tooltip title="Logout">
+                        <IconButton
+                            color="inherit"
+                            onClick={logout}
+                            aria-label="logout"
+                            sx={{ ml: 1 }}
+                        >
+                            <LogoutIcon />
+                        </IconButton>
+                    </Tooltip>
+                )}
             </Toolbar>
         </AppBar>
     );
